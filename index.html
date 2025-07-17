@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VaultofCodes - Certificate Verifier</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --accent: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --bg-light: #f1f5f9;
+      --bg-dark: #0f172a;
+      --text-dark: #1e293b;
+      --text-light: #f8fafc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-dark);
+      transition: 0.4s ease;
+    }
+
+    .dark-mode {
+      background: var(--bg-dark);
+      color: var(--text-light);
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 20px;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .dark-mode header {
+      background: #1e293b;
+    }
+
+    .logo-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-container img {
+      height: 70px;
+    }
+
+    .logo-text {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .dark-mode .logo-text {
+      color: var(--text-light);
+    }
+
+    .toggle-btn {
+      position: absolute;
+      right: 20px;
+      top: 14px;
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--primary), var(--accent), var(--warning));
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease;
+    }
+
+    .toggle-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .dark-mode .container {
+      background: #1e293b;
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--primary);
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      margin: 20px 0;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      background: #f9fafb;
+      color: #111827;
+    }
+
+    .dark-mode input {
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+    }
+
+    button.verify-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(to right, var(--primary), var(--accent));
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .card {
+      margin-top: 30px;
+      background: #f9fafb;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .dark-mode .card {
+      background: #1e293b;
+    }
+
+    .card img {
+      border-radius: 50%;
+      width: 100px;
+      height: 100px;
+    }
+
+    .assignment-status span {
+      margin: 4px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      display: inline-block;
+      color: white;
+    }
+
+    .assignment-status span.done {
+      background: var(--accent);
+    }
+
+    .assignment-status span.pending {
+      background: var(--danger);
+    }
+
+    .chart-container {
+      margin-top: 20px;
+    }
+
+    .spinner-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 5px solid #ccc;
+      border-top: 5px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 14px 24px;
+      border-radius: 8px;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.5s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    @media (max-width: 768px) {
+      .logo-text {
+        font-size: 20px;
+      }
+
+      .container {
+        margin: 20px 10px;
+        padding: 20px;
+      }
+
+      button.verify-btn {
+        font-size: 14px;
+      }
+
+      .toggle-btn {
+        top: 10px;
+        right: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <img src="https://vaultofcodes.site/logo.png" alt="VaultofCodes Logo" />
+      <span class="logo-text">VaultofCodes</span>
+    </div>
+    <button class="toggle-btn" id="modeToggle" onclick="toggleDarkMode()">🌙</button>
+  </header>
+
+  <div class="container" id="mainContainer">
+    <h2>Certificate Verifier</h2>
+    <input type="text" id="loginId" placeholder="Enter your Email or ID" />
+    <button class="verify-btn" onclick="verifyStudent()">Verify</button>
+    <div id="result"></div>
+  </div>
+
+  <div class="spinner-overlay" id="spinnerOverlay">
+    <div class="spinner"></div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    let currentChart = null;
+    let darkMode = false;
+
+    function verifyStudent() {
+      const id = document.getElementById('loginId').value.trim();
+      const resultBox = document.getElementById('result');
+      if (!id) return showToast("❗ Please enter a valid ID or Email");
+      showSpinner(true);
+
+      setTimeout(() => {
+        const student = {
+          name: "Sanjana Singh",
+          email: "Sanjana3442@gmail.com",
+          mobile: "9876543210",
+          domain: "Web Development",
+          college: "Lakshya University",
+          start: "01 June 2024",
+          duration: "1 Month",
+          photo: "https://www.shutterstock.com/image-photo/outdoor-photo-indian-college-student-260nw-2500411537.jpg",
+          assignments: [true, false, true, true],
+          certificate: "#"
+        };
+
+        const statusHTML = student.assignments.map((done, i) =>
+          `<span class="${done ? 'done' : 'pending'}">Assignment ${i + 1}: ${done ? "✅" : "❌"}</span>`).join('');
+
+        resultBox.innerHTML = `
+          <div class="card ${darkMode ? 'dark-mode' : ''}">
+            <img src="${student.photo}" alt="Student Photo" />
+            <h3>${student.name}</h3>
+            <p><strong>Email:</strong> ${student.email}</p>
+            <p><strong>Mobile:</strong> ${student.mobile}</p>
+            <p><strong>Domain:</strong> ${student.domain}</p>
+            <p><strong>College:</strong> ${student.college}</p>
+            <p><strong>Start Date:</strong> ${student.start}</p>
+            <p><strong>Duration:</strong> ${student.duration}</p>
+            <div class="assignment-status">${statusHTML}</div>
+            <p><strong>Status:</strong> Completed</p>
+            <p><a href="${student.certificate}" target="_blank">🎓 View Certificate</a></p>
+            <div class="chart-container"><canvas id="assignmentChart"></canvas></div>
+          </div>
+        `;
+
+        drawChart(student.assignments);
+        showSpinner(false);
+        showToast("✅ Verified Successfully (Demo)");
+      }, 1000);
+    }
+
+    function drawChart(assignments) {
+      const completed = assignments.filter(Boolean).length;
+      const pending = assignments.length - completed;
+
+      if (currentChart) currentChart.destroy();
+
+      const ctx = document.getElementById('assignmentChart');
+      const barColors = darkMode ? ['#4ade80', '#f87171'] : ['#22c55e', '#ef4444'];
+      const textColor = darkMode ? '#f8fafc' : '#1e293b';
+      const gridColor = darkMode ? '#475569' : '#e2e8f0';
+
+      currentChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['✅ Completed', '❌ Pending'],
+          datasets: [{
+            label: 'Assignment Status',
+            data: [completed, pending],
+            backgroundColor: barColors,
+            borderRadius: 8,
+            barThickness: 50
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              ticks: {
+                color: textColor,
+                font: { weight: 'bold' }
+              },
+              grid: { color: gridColor }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: textColor,
+                font: { weight: 'bold' },
+                precision: 0
+              },
+              grid: { color: gridColor }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function showSpinner(show) {
+      document.getElementById('spinnerOverlay').style.display = show ? 'flex' : 'none';
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function toggleDarkMode() {
+      darkMode = !darkMode;
+      document.body.classList.toggle('dark-mode');
+      document.getElementById('mainContainer').classList.toggle('dark-mode');
+
+      const card = document.querySelector('.card');
+      if (card) card.classList.toggle('dark-mode');
+
+      const btn = document.getElementById('modeToggle');
+      btn.textContent = darkMode ? '🌞' : '🌙';
+
+      if (currentChart) {
+        drawChart([true, false, true, true]);
+      }
+    }
+  </script>
+</body>
+</html>
